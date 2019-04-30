@@ -4,7 +4,7 @@ var margin = {top: 0, right: 0, bottom: 0, left: 0},
 
 
 function initialize(){
-  render_scatter_plot();
+  render_map_plot_v2();
 }
 
 
@@ -32,7 +32,7 @@ function render_scatter_plot(){
             "translate(" + margin.left + "," + margin.top + ")");
 
   // Get the data
-  d3.csv("/data/careals.csv", function(error, data) {
+  d3.csv("https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/data/cereals.csv?token=AC5RIEKHQNPZIWU6XF4LYC24Y7CO2", function(error, data) {
     if (error) throw error;
 
     // format the data
@@ -70,6 +70,117 @@ function render_scatter_plot(){
 
   });
 
+}
+
+
+function render_map_plot_v2(){
+  var format = d3.format(",");
+
+  var tip = d3.tip()
+            .attr('class', 'd3-tip')
+            .offset([-10, 0])
+            .html(function(d) {
+              return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br></span>" + "<strong>Population: </strong><span class='details'>" + format(d.population) +"</span>";
+            })
+
+  var path = d3.geoPath();
+
+  var svg = d3.select("svg")
+              .attr("width", width)
+              .attr("height", height)
+              .append('g')
+              .attr('class', 'map');
+
+  var projection = d3.geoMercator()
+                     .scale(130)
+                    .translate( [width / 2, height / 1.5]);
+
+  var path = d3.geoPath().projection(projection);
+
+  svg.call(tip);
+
+  d3.csv("https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/vis%20project%20data/gdp-per-capita-worldbank.csv", function(error, data) {
+    if (error) throw error; 
+
+    var gdp_column = 'GDP per capita, PPP (constant 2011 international $) (constant 2011 international $)';
+
+    var populationByCountry = {};
+
+    console.log(data);
+
+    var minYear = 2500;
+    var maxYear = 1500;
+
+    var minVal = 1000000;
+    var maxVal = 0;
+
+    data.forEach(function(d) { 
+      if (populationByCountry[d['Year']] == undefined || populationByCountry[d['Year']].length == 0)
+        populationByCountry[d['Year']] = {};
+
+      minYear = Math.min(minYear, parseInt(d['Year']));
+      maxYear = Math.max(maxYear, parseInt(d['Year']));
+
+      minVal = Math.min(minVal, parseInt(d[gdp_column]));
+      maxVal = Math.max(maxVal, parseInt(d[gdp_column]));
+
+      populationByCountry[d['Year']][d['Code']] = +d[gdp_column]; });
+
+    console.log(populationByCountry);
+    console.log("Min Year: " + minYear);
+    console.log("Max Year: " + maxYear);
+
+    document.getElementById("slider").oninput = function() {
+      var val = document.getElementById("slider").value
+      var slidermin = document.getElementById("slider").min
+      var slidermax = document.getElementById("slider").max
+      console.log(val)
+    };
+
+    var color = d3.scaleThreshold()
+    .domain([minVal,maxVal])
+    .range(["rgb(247,251,255)", "rgb(3,19,43)"]);
+
+
+    svg.append("g")
+      .attr("class", "countries")
+      .selectAll("path")
+        .data(data)
+      .enter().append("path")
+        .attr("d", path)
+        .style("fill", function(d) { return color(populationByCountry['2017'][d['Code']]); })
+        .style('stroke', 'white')
+        .style('stroke-width', 1.5)
+        .style("opacity",0.8)
+        // tooltips
+          .style("stroke","white")
+          .style('stroke-width', 0.3)
+          .on('mouseover',function(d){
+            tip.show(d);
+
+            d3.select(this)
+              .style("opacity", 1)
+              .style("stroke","white")
+              .style("stroke-width",3);
+          })
+          .on('mouseout', function(d){
+            tip.hide(d);
+
+            d3.select(this)
+              .style("opacity", 0.8)
+              .style("stroke","white")
+              .style("stroke-width",0.3);
+          });
+
+    svg.append("path")
+        .datum(topojson.mesh(data, function(a, b) { return a['Code'] !== b['Code']; }))
+         // .datum(topojson.mesh(data.features, function(a, b) { return a !== b; }))
+        .attr("class", "names")
+        .attr("d", path);
+
+    console.log("Map plotted");
+
+  });
 }
 
 
@@ -111,6 +222,9 @@ function render_map_plot() {
 
   function ready(error, data, population) {
     var populationById = {};
+
+    console.log(population)
+    console.log(data.features)
 
     population.forEach(function(d) { populationById[d.id] = +d.population; });
     data.features.forEach(function(d) { d.population = populationById[d.id] });
