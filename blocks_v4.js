@@ -4,6 +4,9 @@ var margin = {top: 0, right: 0, bottom: 0, left: 0},
 
 
 function initialize(){
+  // console.log("v1")
+  // render_map_plot();
+  console.log("v2")
   render_map_plot_v2();
 }
 
@@ -74,13 +77,15 @@ function render_scatter_plot(){
 
 
 function render_map_plot_v2(){
+  var current_year = '2017'
   var format = d3.format(",");
 
   var tip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-              return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br></span>" + "<strong>Population: </strong><span class='details'>" + format(d.population) +"</span>";
+              console.log(d)
+              return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br>" +"</span>";
             })
 
   var path = d3.geoPath();
@@ -99,7 +104,12 @@ function render_map_plot_v2(){
 
   svg.call(tip);
 
-  d3.csv("https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/vis%20project%20data/gdp-per-capita-worldbank.csv", function(error, data) {
+  queue()
+    .defer(d3.json, "https://gist.githubusercontent.com/micahstubbs/8e15870eb432a21f0bc4d3d527b2d14f/raw/a45e8709648cafbbf01c78c76dfa53e31087e713/world_countries.json")
+    .defer(d3.csv, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/vis%20project%20data/gdp-per-capita-worldbank.csv")
+    .await(ready);
+
+  function ready(error, country_features, data) {
     if (error) throw error; 
 
     var gdp_column = 'GDP per capita, PPP (constant 2011 international $) (constant 2011 international $)';
@@ -145,10 +155,11 @@ function render_map_plot_v2(){
     svg.append("g")
       .attr("class", "countries")
       .selectAll("path")
-        .data(data)
+        .data(country_features.features)
       .enter().append("path")
         .attr("d", path)
-        .style("fill", function(d) { return color(populationByCountry['2017'][d['Code']]); })
+        .style("fill", function(d) {
+          return color(populationByCountry['2017'][d.id]); })
         .style('stroke', 'white')
         .style('stroke-width', 1.5)
         .style("opacity",0.8)
@@ -173,14 +184,14 @@ function render_map_plot_v2(){
           });
 
     svg.append("path")
-        .datum(topojson.mesh(data, function(a, b) { return a['Code'] !== b['Code']; }))
+        .datum(topojson.mesh(country_features.features, function(a, b) { return a.id !== b.id; }))
          // .datum(topojson.mesh(data.features, function(a, b) { return a !== b; }))
         .attr("class", "names")
         .attr("d", path);
 
     console.log("Map plotted");
 
-  });
+  }
 }
 
 
@@ -192,6 +203,7 @@ function render_map_plot() {
               .attr('class', 'd3-tip')
               .offset([-10, 0])
               .html(function(d) {
+                console.log(d)
                 return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br></span>" + "<strong>Population: </strong><span class='details'>" + format(d.population) +"</span>";
               })
 
@@ -235,7 +247,8 @@ function render_map_plot() {
         .data(data.features)
       .enter().append("path")
         .attr("d", path)
-        .style("fill", function(d) { return color(populationById[d.id]); })
+        .style("fill", function(d) { 
+          return color(populationById[d.id]); })
         .style('stroke', 'white')
         .style('stroke-width', 1.5)
         .style("opacity",0.8)
