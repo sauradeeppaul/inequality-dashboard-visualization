@@ -3,7 +3,7 @@ var margin = {top: 0, right: 0, bottom: 0, left: 0},
             height = 500 - margin.top - margin.bottom;
 
 
-var current_year = '2017' 
+var current_year = '2017'
 
 
 var minYear = 2500;
@@ -44,67 +44,75 @@ function render_plot(){
 }
 
 
-function render_scatter_plot(){
+function render_scatter_plot(data){
   // parse the date / time
-  var parseTime = d3.timeParse("%d-%b-%y");
-
+  console.log("Data for line chart!")
+  console.log(data)
+  d3.select("svg").selectAll("*").remove();
   // set the ranges
-  var x = d3.scaleTime().range([0, width]);
-  var y = d3.scaleLinear().range([height, 0]);
+  var time_data = d3.entries(data);
+  console.log(time_data)
 
-  // define the line
-  var valueline = d3.line()
-      .x(function(d) { return x(d.date); })
-      .y(function(d) { return y(d.close); });
+  var xScale = d3.scaleLinear()
+             .rangeRound([0, width])
+             .domain([0, d3.max(time_data, (function (d) {
+               return d.key;
+             }))]);
+ var  yScale = d3.scaleLinear()
+              .rangeRound([height, 0])
+              .domain([0, d3.max(time_data, (function (d) {
+                return d.value;
+              }))]);
 
-  // append the svg obgect to the body of the page
-  // appends a 'group' element to 'svg'
-  // moves the 'group' element to the top left margin
-  var svg = d3.select("body").append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-      .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
 
-  // Get the data
-  d3.csv("https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/data/cereals.csv?token=AC5RIEKHQNPZIWU6XF4LYC24Y7CO2", function(error, data) {
-    if (error) throw error;
+  var g = svg.append("g")
 
-    // format the data
-    data.forEach(function(d) {
-        d.date = parseTime(d.date);
-        d.close = +d.close;
-    });
 
-    // Scale the range of the data
-    x.domain(d3.extent(data, function(d) { return d.date; }));
-    y.domain([0, d3.max(data, function(d) { return d.close; })]);
+            g.append("text")
+             .attr("x", (width / 2))
+             .attr("y", 0 - (margin.top / 2))
+             .attr("text-anchor", "middle")
+             .style("font-size", "16px")
+             .style("text-decoration", "underline")
+             .text("Time Series Data");
 
-    // Add the valueline path.
-    svg.append("path")
-        .data([data])
-        .attr("class", "line")
-        .attr("d", valueline);
-        
-    // Add the scatterplot
-    svg.selectAll("dot")
-        .data(data)
-      .enter().append("circle")
-        .attr("r", 5)
-        .attr("cx", function(d) { return x(d.date); })
-        .attr("cy", function(d) { return y(d.close); });
+            // axis-x
+            g.append("g")
+              .attr("transform", "translate(0," + height + ")")
+              .call(d3.axisBottom(xScale).ticks(d3.max(data, (function (d) {
+                return d.value;
+              }))))
 
-    // Add the X Axis
-    svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+              .append("text")
+              .attr("y", height)
+              .attr("x", 10)
+              .attr("text-anchor", "end")
+              .attr("stroke", "black")
+              .text("K values");
 
-    // Add the Y Axis
-    svg.append("g")
-        .call(d3.axisLeft(y));
+            // axis-y
+            g.append("g")
+                //.attr("class", "axis axis--y")
+                .call(d3.axisLeft(yScale));
 
-  });
+  var line = d3.line()
+      .x(function(d, i) { return xScale(d.key); })
+      .y(function(d) { return yScale(d.value); })
+      .curve(d3.curveMonotoneX);
+
+  g.append("path")
+    .attr("class", "line") // Assign a class for styling
+    .attr("d", line(time_data)); // 11. Calls the line generator
+
+  g.selectAll(".dot")
+    .data(time_data)
+    .enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d) { return xScale(d.key) })
+    .attr("cy", function(d) { return yScale(d.value) })
+    .attr("r", 5);
+
+
 
 }
 
@@ -147,7 +155,7 @@ function render_map_plot_v2(){
     .await(ready);
 
   function ready(error, country_features, data) {
-    if (error) throw error; 
+    if (error) throw error;
 
     var data_column = 'val';
 
@@ -158,22 +166,32 @@ function render_map_plot_v2(){
     var minVal = 1000000;
     var maxVal = 0;
 
-    data.forEach(function(d) { 
+    var timeSeries = {};
+
+    data.forEach(function(d) {
       if (populationByCountry[d['Year']] == undefined || populationByCountry[d['Year']].length == 0)
         populationByCountry[d['Year']] = {};
 
       minYear = Math.min(minYear, parseInt(d['Year']));
       maxYear = Math.max(maxYear, parseInt(d['Year']));
 
-      populationByCountry[d['Year']][d['Code']] = d[data_column]; 
+      populationByCountry[d['Year']][d['Code']] = d[data_column];
 
       if(d['Year'] == current_year){
         minVal = Math.min(minVal, parseInt(d[data_column]));
         maxVal = Math.max(maxVal, parseInt(d[data_column]));
       }});
 
+      data.forEach(function(d) {
+        if (timeSeries[d['Code']] == undefined || timeSeries[d['Code']].length == 0)
+          timeSeries[d['Code']] = {};
 
-    country_features.features.forEach(function(d) { 
+          timeSeries[d['Code']][d['Year']] = d[data_column];
+
+        });
+
+
+    country_features.features.forEach(function(d) {
       console.log("loading to features:")
       console.log(d)
       d.val = populationByCountry[current_year][d.id] });
@@ -237,7 +255,11 @@ function render_map_plot_v2(){
               .style("opacity", 0.8)
               .style("stroke","white")
               .style("stroke-width",0.3);
-          });
+          })
+          .on("click", function(d){
+            tip.hide(d);
+            render_scatter_plot(timeSeries[d.id]);
+          })
 
     svg.append("path")
         .datum(topojson.mesh(country_features.features, function(a, b) { return a.id !== b.id; }))
@@ -293,7 +315,7 @@ function prepare_modal(){
 
   // console.log(span)
 
-  // When the user clicks on the button, open the modal 
+  // When the user clicks on the button, open the modal
   pca_btn.onclick = function() {
     console.log("PCA")
     modal.style.display = "block";
