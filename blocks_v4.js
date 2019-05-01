@@ -105,7 +105,7 @@ function render_map_plot_v2(){
   svg.call(tip);
 
   queue()
-    .defer(d3.json, "https://gist.githubusercontent.com/micahstubbs/8e15870eb432a21f0bc4d3d527b2d14f/raw/a45e8709648cafbbf01c78c76dfa53e31087e713/world_countries.json")
+    .defer(d3.json, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/data/world_countries_features.json")
     .defer(d3.csv, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/vis%20project%20data/gdp-per-capita-worldbank.csv")
     .await(ready);
 
