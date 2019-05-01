@@ -3,10 +3,22 @@ var margin = {top: 0, right: 0, bottom: 0, left: 0},
             height = 500 - margin.top - margin.bottom;
 
 
+var current_year = '2017' 
+
+
+var minYear = 2500;
+var maxYear = 1500;
+
+
 function initialize(){
   // console.log("v1")
   // render_map_plot();
-  console.log("v2")
+  console.log("v2");
+  render_plot();
+}
+
+
+function render_plot(){
   render_map_plot_v2();
 }
 
@@ -77,7 +89,6 @@ function render_scatter_plot(){
 
 
 function render_map_plot_v2(){
-  var current_year = '2017'
   var format = d3.format(",");
 
   var tip = d3.tip()
@@ -118,9 +129,6 @@ function render_map_plot_v2(){
 
     console.log(data);
 
-    var minYear = 2500;
-    var maxYear = 1500;
-
     var minVal = 1000000;
     var maxVal = 0;
 
@@ -145,6 +153,9 @@ function render_map_plot_v2(){
       var slidermin = document.getElementById("slider").min
       var slidermax = document.getElementById("slider").max
       console.log(val)
+
+      current_year = minYear + Math.floor((maxYear-minYear)*(val-slidermin)/(slidermax - slidermin))
+      render_plot();
     };
 
     var color = d3.scaleThreshold()
@@ -189,7 +200,7 @@ function render_map_plot_v2(){
         .attr("class", "names")
         .attr("d", path);
 
-    console.log("Map plotted");
+    console.log("Map plotted for " + current_year);
 
   }
 }
