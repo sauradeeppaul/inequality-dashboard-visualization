@@ -96,7 +96,7 @@ function render_map_plot_v2(){
             .offset([-10, 0])
             .html(function(d) {
               console.log(d)
-              return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br>" +"</span>";
+              return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br>" + parseFloat(d.val).toFixed(2) +"</span>";
             })
 
   var path = d3.geoPath();
@@ -117,7 +117,7 @@ function render_map_plot_v2(){
 
   queue()
     .defer(d3.json, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/data/world_countries_features.json")
-    .defer(d3.csv, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/vis%20project%20data/gdp-per-capita-worldbank.csv")
+    .defer(d3.csv, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/visualization%20source%20data/gdp-per-capita-worldbank.csv")
     .await(ready);
 
   function ready(error, country_features, data) {
@@ -139,14 +139,22 @@ function render_map_plot_v2(){
       minYear = Math.min(minYear, parseInt(d['Year']));
       maxYear = Math.max(maxYear, parseInt(d['Year']));
 
-      minVal = Math.min(minVal, parseInt(d[gdp_column]));
-      maxVal = Math.max(maxVal, parseInt(d[gdp_column]));
+      populationByCountry[d['Year']][d['Code']] = d[gdp_column]; 
 
-      populationByCountry[d['Year']][d['Code']] = +d[gdp_column]; });
+      if(d['Year'] == current_year){
+        minVal = Math.min(minVal, parseInt(d[gdp_column]));
+        maxVal = Math.max(maxVal, parseInt(d[gdp_column]));
+      }});
+
+
+    country_features.features.forEach(function(d) { d.val = populationByCountry[current_year][d.id] });
 
     console.log(populationByCountry);
     console.log("Min Year: " + minYear);
     console.log("Max Year: " + maxYear);
+
+    console.log("Min Val: " + minVal);
+    console.log("Max Val: " + maxVal);
 
     document.getElementById("slider").oninput = function() {
       var val = document.getElementById("slider").value
@@ -159,8 +167,11 @@ function render_map_plot_v2(){
     };
 
     var color = d3.scaleThreshold()
-    .domain([minVal,maxVal])
-    .range(["rgb(247,251,255)", "rgb(3,19,43)"]);
+    .domain([minVal, minVal+maxVal/2, maxVal])
+    .range(["rgb(247,251,255)", "rgb(107,174,214)", "rgb(3,19,43)"]);
+
+    console.log("Population By Country")
+    console.log(populationByCountry)
 
 
     svg.append("g")
@@ -170,7 +181,12 @@ function render_map_plot_v2(){
       .enter().append("path")
         .attr("d", path)
         .style("fill", function(d) {
-          return color(populationByCountry['2017'][d.id]); })
+          // console.log("V2 stuff: ")
+          // console.log(d);
+          var c = color(populationByCountry[current_year][d.id])
+          // console.log(populationByCountry[current_year][d.id])
+          // console.log(c);
+          return c; })
         .style('stroke', 'white')
         .style('stroke-width', 1.5)
         .style("opacity",0.8)
@@ -214,7 +230,6 @@ function render_map_plot() {
               .attr('class', 'd3-tip')
               .offset([-10, 0])
               .html(function(d) {
-                console.log(d)
                 return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br></span>" + "<strong>Population: </strong><span class='details'>" + format(d.population) +"</span>";
               })
 
