@@ -9,10 +9,19 @@ var current_year = '2017'
 var minYear = 2500;
 var maxYear = 1500;
 
+var svg;
+
 
 function initialize(){
   // console.log("v1")
   // render_map_plot();
+
+  svg = d3.select("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append('g')
+            .attr('class', 'map');
+
   console.log("v2");
   render_plot();
 }
@@ -103,11 +112,6 @@ function render_map_plot_v2(){
 
   var path = d3.geoPath();
 
-  var svg = d3.select("svg")
-              .attr("width", width)
-              .attr("height", height)
-              .append('g')
-              .attr('class', 'map');
 
   var projection = d3.geoMercator()
                      .scale(130)
@@ -125,7 +129,7 @@ function render_map_plot_v2(){
   function ready(error, country_features, data) {
     if (error) throw error; 
 
-    var gdp_column = 'GDP per capita, PPP (constant 2011 international $) (constant 2011 international $)';
+    var gdp_column = 'val';
 
     var populationByCountry = {};
 
