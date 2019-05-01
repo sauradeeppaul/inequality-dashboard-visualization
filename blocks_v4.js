@@ -166,7 +166,7 @@ function render_map_plot_v2(){
       render_plot();
     };
 
-    var color = d3.scaleThreshold()
+    var color = d3.scaleLinear()
     .domain([minVal, minVal+maxVal/2, maxVal])
     .range(["rgb(247,251,255)", "rgb(107,174,214)", "rgb(3,19,43)"]);
 
