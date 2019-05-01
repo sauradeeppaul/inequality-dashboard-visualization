@@ -12,9 +12,17 @@ var maxYear = 1500;
 var svg;
 
 
+var map_features = ["GDP per Capita", "Life Expectancy"];
+var current_feature;
+
+
 function initialize(){
   // console.log("v1")
   // render_map_plot();
+
+  current_feature = map_features[0];
+
+  prepareDropdown();
 
   svg = d3.select("svg")
             .attr("width", width)
@@ -102,6 +110,16 @@ function render_scatter_plot(){
 function render_map_plot_v2(){
   var format = d3.format(",");
 
+  var csv_file;
+
+  if (current_feature == map_features[0]){
+    csv_file = "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/visualization%20source%20data/gdp-per-capita-worldbank.csv";
+  } else if(current_feature == map_features[1]){
+    csv_file = "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/visualization%20source%20data/life-expectancy.csv"
+  }
+
+  console.log("Loading data from " + csv_file);
+
   var tip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
@@ -123,7 +141,7 @@ function render_map_plot_v2(){
 
   queue()
     .defer(d3.json, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/data/world_countries_features.json")
-    .defer(d3.csv, "https://raw.githubusercontent.com/sauradeeppaul/inequality-dashboard-visualization/master/visualization%20source%20data/gdp-per-capita-worldbank.csv")
+    .defer(d3.csv, csv_file)
     .await(ready);
 
   function ready(error, country_features, data) {
@@ -225,4 +243,33 @@ function render_map_plot_v2(){
     console.log("Map plotted for " + current_year);
 
   }
+}
+
+
+function prepareDropdown() {
+  console.log("F:prepareDropdown()")
+
+  var dropdownChange = function () {
+    console.log("-------------------------------------------------------")
+    console.log("F:dropdownChange()")
+
+    var new_feature = d3.select(this).property('value');
+    current_feature = new_feature;
+    render_plot();
+    console.log("Field:", current_feature);
+  };
+
+  dropdown = d3.select("#dropdown")
+    .insert("select", "svg")
+    .on("change", dropdownChange);
+
+  dropdown.selectAll("option")
+    .data(map_features)
+    .enter().append("option")
+    .attr("value", function (d) {
+      return d;
+    })
+    .text(function (d) {
+      return d[0].toUpperCase() + d.slice(1, d.length);
+    });
 }
