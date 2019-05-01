@@ -19,6 +19,8 @@ function initialize(){
 
 
 function render_plot(){
+
+  // d3.selectAll("svg > *").remove();
   render_map_plot_v2();
 }
 
@@ -167,11 +169,11 @@ function render_map_plot_v2(){
     };
 
     var color = d3.scaleLinear()
-    .domain([minVal, minVal+maxVal/2, maxVal])
-    .range(["rgb(247,251,255)", "rgb(107,174,214)", "rgb(3,19,43)"]);
+    .domain([minVal, Math.sqrt(minVal*maxVal), maxVal])
+    .range(["rgb(242, 52, 19)", "rgb(244, 244, 9)", "rgb(44, 186, 44)"]);
 
-    console.log("Population By Country")
-    console.log(populationByCountry)
+    // console.log("Population By Country")
+    // console.log(populationByCountry)
 
 
     svg.append("g")
