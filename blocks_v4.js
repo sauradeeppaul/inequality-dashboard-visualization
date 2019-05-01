@@ -125,7 +125,7 @@ function render_map_plot_v2(){
             .offset([-10, 0])
             .html(function(d) {
               console.log(d)
-              return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br>" + parseFloat(d.val).toFixed(2) +"</span>";
+              return "<strong>Country: </strong><span class='details'>" + d.properties.name + "<br><strong>" + current_feature + ": </strong><span class='details'>" + parseFloat(d.val).toFixed(2) +"</span>";
             })
 
   var path = d3.geoPath();
@@ -171,7 +171,10 @@ function render_map_plot_v2(){
       }});
 
 
-    country_features.features.forEach(function(d) { d.val = populationByCountry[current_year][d.id] });
+    country_features.features.forEach(function(d) { 
+      console.log("loading to features:")
+      console.log(d)
+      d.val = populationByCountry[current_year][d.id] });
 
     console.log(populationByCountry);
     console.log("Min Year: " + minYear);
