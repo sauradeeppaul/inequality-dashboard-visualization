@@ -48,7 +48,7 @@ function render_scatter_plot(data){
   // parse the date / time
   console.log("Data for line chart!")
   console.log(data)
-  d3.select("svg").selectAll("*").remove();
+  d3.select("svg > *").remove();
   // set the ranges
   var time_data = d3.entries(data);
   console.log(time_data)
@@ -65,7 +65,7 @@ function render_scatter_plot(data){
               }))]);
 
 
-  var g = svg.append("g")
+  var g = d3.select("svg").append("g")
 
 
             g.append("text")
@@ -78,7 +78,7 @@ function render_scatter_plot(data){
 
             // axis-x
             g.append("g")
-              .attr("transform", "translate(0," + height + ")")
+              .attr("transform", "translate(0," + 0 + ")")
               .call(d3.axisBottom(xScale).ticks(d3.max(data, (function (d) {
                 return d.value;
               }))))
@@ -110,7 +110,8 @@ function render_scatter_plot(data){
     .attr("class", "dot") // Assign a class for styling
     .attr("cx", function(d) { return xScale(d.key) })
     .attr("cy", function(d) { return yScale(d.value) })
-    .attr("r", 5);
+    .attr("r", 5)
+    .attr("transform", "translate(" + (-200) + "," + (200) + ")");
 
 
 
